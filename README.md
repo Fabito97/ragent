@@ -1,6 +1,17 @@
-# Enterprise RAG Agent – Technical Documentation
+# RAgent – Technical Documentation
+
+> **This repository contains:**
+>
+> - `ragent-backend/` – Python FastAPI service
+> - `ragent-frontend/` – React/Vite UI client
+> - `docs/` – supplemental markdown for architecture and design decisions
+>
+> See [docs/architecture.md](docs/architecture.md) for a deep dive and
+> [docs/design_decisions.md](docs/design_decisions.md) for rationale behind
+> technical choices.
 
 ## Table of Contents
+
 1. [Overview](#1-overview)
 2. [Architecture](#2-architecture)
 3. [Project Structure](#3-project-structure)
@@ -15,9 +26,10 @@
 
 ## 1. Overview
 
-RAgent is an AI-powered document knowledge base enabling retrieval-augmented question answering from uploaded PDFs, TXT, CSV, and Excel files.  
+RAgent is an AI-powered document knowledge base enabling retrieval-augmented question answering from uploaded PDFs, TXT, CSV, and Excel files.
 
 **Core components:**
+
 - **LangChain** – orchestration framework for agents, chains, loaders, and splitters
 - **RAG (Retrieval-Augmented Generation)** – ensures answers are grounded in document content
 - **Agentic AI** – multi-step reasoning using tool-calling agents
@@ -32,11 +44,18 @@ Users upload documents and query the system in natural language. The system retr
 ## 2. Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                      FastAPI REST API                        │
+                  ┌───────────────────┐     
+                  │                   │     
+                  │   Frontend SPA    │     
+                  │   (React + Vite)  │     
+                  │                   │     
+                  └───────────────────┘     
+                            |
+┌───────────────────────────▼──────────────────────────────────┐
+│                   FastAPI REST API (API gateway)             │
 │  POST /documents/upload   GET /documents/   POST /query/rag  │
-│  GET /documents/{f}       GET /health       POST /query/agent|
-│  DELETE /documents/{f}    GET /documents/{f}/download        |
+│  GET /documents/{f}       GET /health       POST /query/agent│
+│  DELETE /documents/{f}    GET /documents/{f}/download        │
 └────────────┬─────────────────────┬───────────────────────────┘
              │                     │
      ┌───────▼──────┐     ┌────────▼────────────────────────┐
@@ -59,21 +78,23 @@ Users upload documents and query the system in natural language. The system retr
                           │                │                │
                           │       ┌────────▼──────────┐     │
                           │       │  LLM Layer        │     │
-                          │       │  (Claude via      │     │
-                          │       │  LangChain-       │     │
-                          │       │  Anthropic)       │     │
+                          │       │  (GPT-OSS-120B    │     │
+                          │       │  via LangChain-   │     │
+                          │       │  Groq)            │     │
+                          │       │                   │     │
                           │       └───────────────────┘     │
                           └─────────────────────────────────┘
 ```
 
 ### Key Design Decisions
-| Decision | Choice | Reason |
-|---|---|---|
-| Vector DB | ChromaDB | Local persistent store, no extra infra needed |
-| Embeddings | `all-MiniLM-L6-v2` (HuggingFace) | Fast, free, runs on CPU |
-| LLM | Groq (openai/gpt-oss-120b) | Ultra-fast inference, free tier, OpenAI-compatible |
-| Agent type | Tool-calling agent (LangChain) | Native tool-use API, clean intermediate steps |
-| Chain style | LCEL (LangChain Expression Language) | Composable, readable, type-safe |
+
+| Decision    | Choice                               | Reason                                             |
+| ----------- | ------------------------------------ | -------------------------------------------------- |
+| Vector DB   | ChromaDB                             | Local persistent store, no extra infra needed      |
+| Embeddings  | `all-MiniLM-L6-v2` (HuggingFace)     | Fast, free, runs on CPU                            |
+| LLM         | Groq (openai/gpt-oss-120b)           | Ultra-fast inference, free tier, OpenAI-compatible |
+| Agent type  | Tool-calling agent (LangChain)       | Native tool-use API, clean intermediate steps      |
+| Chain style | LCEL (LangChain Expression Language) | Composable, readable, type-safe                    |
 
 ---
 
@@ -122,20 +143,23 @@ rag_agent/
 ## 4. Agent Roles & Reasoning Flow
 
 ### Orchestrator Agent (`rag_agent.py`)
+
 - **Role**: Plans which tools to call based on the user's question
 - **Model**: GPT (via `Groq`)
 - **Framework**: `create_tool_calling_agent` + `AgentExecutor`
 - **Max iterations**: 6 (safety cap to prevent infinite loops)
 
 ### Agent Tools (`tools.py`)
-| Tool | Purpose |
-|---|---|
-| `retrieve_documents` | Fetch raw relevant passages from ChromaDB |
+
+| Tool                      | Purpose                                       |
+| ------------------------- | --------------------------------------------- |
+| `retrieve_documents`      | Fetch raw relevant passages from ChromaDB     |
 | `list_uploaded_documents` | Show what documents are in the knowledge base |
-| `fetch_chunks_by_page` | Gets all chunks of a particular page |
-| `fetch_chunks_by_index` | Gets a particular chunk by its index |
+| `fetch_chunks_by_page`    | Gets all chunks of a particular page          |
+| `fetch_chunks_by_index`   | Gets a particular chunk by its index          |
 
 ### Reasoning Flow
+
 ```
 User Question
     │
@@ -153,26 +177,37 @@ Final Answer + Steps + Tools Used → returned to API caller
 ```
 
 ### RAG vs Agent endpoint
-| | `/query/rag` | `/query/agent` |
-|---|---|---|
-| Reasoning | Fixed 1-step pipeline | Multi-step autonomous |
-| Speed | Faster | Slower (more LLM calls) |
-| Transparency | Source list | Full step trace |
-| Best for | Simple factual queries | Complex multi-hop questions |
+
+|              | `/query/rag`           | `/query/agent`              |
+| ------------ | ---------------------- | --------------------------- |
+| Reasoning    | Fixed 1-step pipeline  | Multi-step autonomous       |
+| Speed        | Faster                 | Slower (more LLM calls)     |
+| Transparency | Source list            | Full step trace             |
+| Best for     | Simple factual queries | Complex multi-hop questions |
 
 ---
 
 ## 5. System Setup
-After you must have cloned the repo
+
+Before any setup can be done make sure to clone the project into your local machine.
 
 ### Frontent Setup (React)
-- cd ragent-frontend
-- npm install
-- npm run dev
+
+```bash
+# 1. Clone / extract the project
+cd ragent-frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the server
+npm run dev
+```
 
 ### Backend Setup (Python)
 
 ### Prerequisites
+
 - Python 3.11+
 - Groq API key
 
@@ -198,6 +233,7 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### Verify installation
+
 Open `http://localhost:8000/docs` for the interactive Swagger UI.
 
 ---
@@ -205,9 +241,11 @@ Open `http://localhost:8000/docs` for the interactive Swagger UI.
 ## 6. API Reference
 
 ### `GET /health`
+
 Returns system status and knowledge-base statistics.
 
 **Response**
+
 ```json
 {
   "status": "ok",
@@ -220,6 +258,7 @@ Returns system status and knowledge-base statistics.
 ---
 
 ### `POST /documents/upload`
+
 Upload and ingest a document into the knowledge base.
 
 **Request**: `multipart/form-data` with field `file`.
@@ -227,6 +266,7 @@ Upload and ingest a document into the knowledge base.
 **Supported formats**: `pdf`, `txt`, `csv`, `xlsx`, `xls`
 
 **Response**
+
 ```json
 {
   "message": "Document ingested successfully.",
@@ -239,9 +279,11 @@ Upload and ingest a document into the knowledge base.
 ---
 
 ### `GET /documents/`
+
 List all documents in the knowledge base.
 
 **Response**
+
 ```json
 {
   "total_chunks": 47,
@@ -252,9 +294,11 @@ List all documents in the knowledge base.
 ---
 
 ### `DELETE /documents/{filename}`
+
 Remove a document and all its chunks from the knowledge base.
 
 **Response**
+
 ```json
 {
   "message": "Document removed successfully.",
@@ -266,40 +310,44 @@ Remove a document and all its chunks from the knowledge base.
 ---
 
 ### `POST /query/rag`
+
 Direct RAG query — fast, fixed pipeline.
 
 **Request**
+
 ```json
 { "question": "What were the Q3 revenue figures?" }
 ```
 
 **Response**
+
 ```json
 {
   "answer": "According to the uploaded report, Q3 revenue was $4.2M...",
-  "sources": [
-    { "filename": "report.pdf", "chunk_index": 12 }
-  ]
+  "sources": [{ "filename": "report.pdf", "chunk_index": 12 }]
 }
 ```
 
 ---
 
 ### `POST /query/agent`
+
 Agentic query — autonomous multi-step reasoning.
 
 **Request**
+
 ```json
 {
   "question": "Compare the risk factors in the 2023 and 2024 annual reports.",
   "chat_history": [
     { "role": "human", "content": "I uploaded both annual reports." },
-    { "role": "ai",    "content": "Great, I can see them in the knowledge base." }
+    { "role": "ai", "content": "Great, I can see them in the knowledge base." }
   ]
 }
 ```
 
 **Response**
+
 ```json
 {
   "answer": "Based on both reports, the 2024 filing highlights...",
@@ -318,37 +366,40 @@ Agentic query — autonomous multi-step reasoning.
 
 ## 7. Configuration Reference
 
-| Variable | Default | Description |
-|---|---|---|
-| `GROQ_API_KEY` | _(required)_ | Your Groq API key (free at console.groq.com) |
-| `LLM_MODEL` | `openai/gpt-oss-120b` | Groq model to use |
-| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Sentence-transformer model |
-| `UPLOAD_DIR` | `./uploads` | Where uploaded files are saved |
-| `CHROMA_PERSIST_DIR` | `./chroma_db` | ChromaDB persistence directory |
-| `CHROMA_COLLECTION_NAME` | `enterprise_docs` | ChromaDB collection name |
-| `CHUNK_SIZE` | `800` | Characters per chunk |
-| `CHUNK_OVERLAP` | `150` | Overlap between adjacent chunks |
-| `TOP_K_RESULTS` | `5` | Chunks retrieved per query |
-| `MAX_FILE_SIZE_MB` | `50` | Maximum upload size |
-| `ALLOWED_EXTENSIONS` | `pdf,txt,csv,xlsx,xls` | Permitted file types |
-| `DEBUG` | `false` | Enable verbose agent logging |
+| Variable                 | Default                | Description                                  |
+| ------------------------ | ---------------------- | -------------------------------------------- |
+| `GROQ_API_KEY`           | _(required)_           | Your Groq API key (free at console.groq.com) |
+| `LLM_MODEL`              | `openai/gpt-oss-120b`  | Groq model to use                            |
+| `EMBEDDING_MODEL`        | `all-MiniLM-L6-v2`     | Sentence-transformer model                   |
+| `UPLOAD_DIR`             | `./uploads`            | Where uploaded files are saved               |
+| `CHROMA_PERSIST_DIR`     | `./chroma_db`          | ChromaDB persistence directory               |
+| `CHROMA_COLLECTION_NAME` | `enterprise_docs`      | ChromaDB collection name                     |
+| `CHUNK_SIZE`             | `800`                  | Characters per chunk                         |
+| `CHUNK_OVERLAP`          | `150`                  | Overlap between adjacent chunks              |
+| `TOP_K_RESULTS`          | `5`                    | Chunks retrieved per query                   |
+| `MAX_FILE_SIZE_MB`       | `50`                   | Maximum upload size                          |
+| `ALLOWED_EXTENSIONS`     | `pdf,txt,csv,xlsx,xls` | Permitted file types                         |
+| `DEBUG`                  | `false`                | Enable verbose agent logging                 |
 
 ---
 
 ## 8. Deployment Guide
 
 ### Local (development)
+
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### Production (Gunicorn + Uvicorn workers)
+
 ```bash
 pip install gunicorn
 gunicorn main:app -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000
 ```
 
 ### Docker
+
 ```dockerfile
 FROM python:3.11-slim
 WORKDIR /app
@@ -365,7 +416,9 @@ docker run -e GROQ_API_KEY=your_key -p 8000:8000 rag-agent
 ```
 
 ### Environment variables in production
+
 Never commit `.env` to source control. Use:
+
 - Docker `--env-file` or `-e` flags
 - Cloud provider secret managers (AWS Secrets Manager, GCP Secret Manager)
 - Platform environment variable settings (Railway, Render, Fly.io)
@@ -375,17 +428,19 @@ Never commit `.env` to source control. Use:
 ## 9. Limitations & Challenges
 
 ### Limitations
-| Area | Limitation |
-|---|---|
-| **Memory** | ChromaDB is local; not suited for multi-server deployments without a shared volume |
-| **Embeddings** | `all-MiniLM-L6-v2` is English-optimised; multilingual docs may have lower recall |
-| **File size** | Very large documents (>50 MB) increase ingestion time significantly |
-| **Tables** | Complex multi-column tables in PDFs may not parse cleanly with PyPDF |
-| **Images** | Image content within PDFs (charts, diagrams) is not extracted |
-| **Context window** | Long documents are chunked; cross-chunk reasoning requires agent multi-hop calls |
-| **Concurrency** | Singleton vector store may have race conditions under heavy parallel writes |
+
+| Area               | Limitation                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| **Memory**         | ChromaDB is local; not suited for multi-server deployments without a shared volume |
+| **Embeddings**     | `all-MiniLM-L6-v2` is English-optimised; multilingual docs may have lower recall   |
+| **File size**      | Very large documents (>50 MB) increase ingestion time significantly                |
+| **Tables**         | Complex multi-column tables in PDFs may not parse cleanly with PyPDF               |
+| **Images**         | Image content within PDFs (charts, diagrams) is not extracted                      |
+| **Context window** | Long documents are chunked; cross-chunk reasoning requires agent multi-hop calls   |
+| **Concurrency**    | Singleton vector store may have race conditions under heavy parallel writes        |
 
 ### Challenges Encountered
+
 1. **Prompt injection** – Mitigated with query validation that rejects known injection patterns.
 2. **Hallucination** – System prompt strictly instructs the LLM to only use provided context. Temperature is set to 0.1–0.2 for factual grounding.
 3. **Chunk boundary splitting** – Answers sometimes span two chunks. Solved with `CHUNK_OVERLAP=150` to ensure no information is lost at boundaries.
@@ -393,6 +448,7 @@ Never commit `.env` to source control. Use:
 5. **Cold start latency** – Embedding model download (~90 MB) on first run. Subsequent starts use the cached model.
 
 ### Future Improvements
+
 - Add a re-ranking step (cross-encoder) after initial retrieval for higher precision
 - Support for tables and OCR for scanned PDF documents
 - Add authentication (API key or OAuth2) to the FastAPI routes

@@ -976,3 +976,12 @@ Chunk metadata varies by file type and loader:
 
 **Last Updated**: March 2026  
 **API Version**: 1.0.0
+
+
+> When the backend is running locally you can also access interactive documentation at:
+>
+> - `/docs` (Swagger UI)
+> - `/redoc` (ReDoc)
+
+For convenience the file has been duplicated here; refer to the source-of-truth when making
+documentation updates.
