@@ -9,6 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from config import settings
+from app.routes.health import router as health_router
+from app.routes.documents import router as documents_router
+from app.routes.query import router as query_router
+from app.routes.sessions import router as sessions_router
 from app.utils.logger import get_logger
 
 log = get_logger("main")
@@ -43,6 +47,34 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": "An unexpected error occurred. Please try again."},
     )
+
+
+# ── Routers ───────────────────────────────────────────────────────────────────
+app.include_router(health_router)
+app.include_router(documents_router)
+app.include_router(query_router)
+app.include_router(sessions_router)
+
+
+# ── Root ──────────────────────────────────────────────────────────────────────
+@app.get("/", tags=["Root"])
+def root():
+    return {
+        "message": "RAG Agent API is running.",
+        "docs": "/docs",
+        "health": "/health",
+        "endpoints": {
+            "upload_document": "POST /documents/upload",
+            "list_documents":  "GET  /documents/",
+            "get_document": "GET /documents/{filename}",
+            "delete_document": "DELETE /documents/{filename}",
+            "query_rag":       "POST /query/rag",
+            "query_agent":     "POST /query/agent",
+            "list_active_sessions":   "GET /sessions/",
+            "session_history": "GET  /sessions/{session_id}",
+            "delete_session":  "DELETE /sessions/{session_id}",
+            },
+    }
 
 
 # ── Dev runner ────────────────────────────────────────────────────────────────

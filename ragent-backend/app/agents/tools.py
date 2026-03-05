@@ -158,6 +158,8 @@ def fetch_chunks_by_page(filename: str, page: int) -> str:
     if page < 1:
         return "Page number must be 1 or greater."
 
+
+
     docs = get_chunks_by_page(filename, page)
 
     if not docs:
@@ -171,4 +173,4 @@ def fetch_chunks_by_page(filename: str, page: int) -> str:
     return "\n\n---\n\n".join(parts)
 
 
-AGENT_TOOLS = [retrieve_documents, list_uploaded_documents]
+AGENT_TOOLS = [retrieve_documents, list_uploaded_documents, fetch_chunks_by_page, fetch_chunks_by_index]

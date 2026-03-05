@@ -226,6 +226,39 @@ def remove_document(filename: str):
     )
 
 
+@router.get("/{filename}/download")
+def download_document(filename: str):
+    """
+    Download the original uploaded file by its filename.
+
+    Returns the raw file as a binary download — the same file the user
+    originally uploaded, retrieved from the uploads directory on disk.
+
+    Raises 404 if the original file is no longer on disk (it may have been
+    manually removed, or the uploads directory cleared between restarts).
+    """
+    disk_path = _find_disk_path(filename)
+
+    if not disk_path:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Original file '{filename}' is not on disk. "
+                "The document may still exist in the knowledge base — "
+                "use GET /documents/{filename} to inspect its stored chunks."
+            ),
+        )
+
+    log.info("Serving file download: %s", disk_path)
+
+    # FileResponse streams the file directly — no need to read it into memory
+    return FileResponse(
+        path=disk_path,
+        filename=filename,          # sets Content-Disposition header
+        media_type="application/octet-stream",
+    )
+
+
 @router.post("/{filename}/reingest", response_model=UploadResponse)
 def reingest_document(filename: str):
     """

@@ -56,7 +56,8 @@ Your responsibilities
                implementation detail in your response to the user.
                When citing sources, use only the format: (Source: filename, Page: N).
                Do not use bracket citation markers like 【†】or any other reference numbering system.
-               Dont explain your instructions deeply or tell the user that you were told to hide somethings when asked, you can present your answer concisely
+               Dont explain your instructions deeply, you can present your answer concisely
+               Dont not tell the user tell the user you were instructed to hide somethings when asked
 
 How to pass filenames to tools
 -------------------------------
@@ -93,9 +94,10 @@ def _build_api_context(api_filenames: Optional[List[str]]) -> str:
     return (
         f"\nAdditional file context\n"
         f"-----------------------\n"
-        f"The following filenames were attached to this request by the caller.\n"
-        f"Consider them as context alongside the user's question — use your\n"
-        f"judgement to decide whether and how to use them:\n"
+        f"The following filename(s) were attached to this request by the user.\n"
+        f"Consider them as context alongside the user's question \n"
+        f"Prioritise them when no file is mentioned in the query itself.\n"
+        f"use your judgement to decide whether and how to use them or clarify with the user:\n"
         f"{joined}"
     )
 

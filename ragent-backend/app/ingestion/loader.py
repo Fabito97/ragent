@@ -9,7 +9,7 @@ from typing import List
 
 from langchain_core.documents import Document
 from langchain_community.document_loaders import (
-    PyPDFLoader,
+    PyMuPDFLoader,
     TextLoader,
     CSVLoader,
     UnstructuredExcelLoader,
@@ -19,7 +19,7 @@ from app.utils.logger import get_logger
 log = get_logger(__name__)
 
 LOADER_MAP = {
-    "pdf":  PyPDFLoader,
+    "pdf":  PyMuPDFLoader,
     "txt":  TextLoader,
     "csv":  CSVLoader,
     "xlsx": UnstructuredExcelLoader,

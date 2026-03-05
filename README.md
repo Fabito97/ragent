@@ -15,15 +15,17 @@
 
 ## 1. Overview
 
-This application is an AI-powered document knowledge base that combines:
-- **LangChain** – orchestration framework for agents, chains, loaders, and splitters
-- **Retrieval-Augmented Generation (RAG)** – grounds LLM answers in uploaded documents
-- **Agentic AI** – autonomous multi-step reasoning using tool-calling agents
-- **ChromaDB** – persistent local vector database for semantic search
-- **Groq GPT** – LLM backbone for reasoning and generation
-- **FastAPI** – high-performance async REST API layer
+RAgent is an AI-powered document knowledge base enabling retrieval-augmented question answering from uploaded PDFs, TXT, CSV, and Excel files.  
 
-Users upload documents in PDF, TXT, CSV, or Excel format. They can then ask natural-language questions. The system retrieves relevant content and generates grounded, citation-backed answers.
+**Core components:**
+- **LangChain** – orchestration framework for agents, chains, loaders, and splitters
+- **RAG (Retrieval-Augmented Generation)** – ensures answers are grounded in document content
+- **Agentic AI** – multi-step reasoning using tool-calling agents
+- **ChromaDB** – local persistent vector database for semantic search
+- **Groq GPT** – LLM backbone for reasoning and answer generation
+- **FastAPI** – async REST API layer
+
+Users upload documents and query the system in natural language. The system retrieves relevant chunks and generates grounded, citation-backed responses.
 
 ---
 
@@ -77,6 +79,8 @@ Users upload documents in PDF, TXT, CSV, or Excel format. They can then ask natu
 
 ## 3. Project Structure
 
+### Backend Structure
+
 ```
 rag_agent/
 ├── main.py                   # FastAPI app, router registration, global error handler
@@ -127,8 +131,9 @@ rag_agent/
 | Tool | Purpose |
 |---|---|
 | `retrieve_documents` | Fetch raw relevant passages from ChromaDB |
-| `answer_with_rag` | Generate full LLM-synthesised answer using RAG pipeline |
 | `list_uploaded_documents` | Show what documents are in the knowledge base |
+| `fetch_chunks_by_page` | Gets all chunks of a particular page |
+| `fetch_chunks_by_index` | Gets a particular chunk by its index |
 
 ### Reasoning Flow
 ```
@@ -158,6 +163,14 @@ Final Answer + Steps + Tools Used → returned to API caller
 ---
 
 ## 5. System Setup
+After you must have cloned the repo
+
+### Frontent Setup (React)
+- cd ragent-frontend
+- npm install
+- npm run dev
+
+### Backend Setup (Python)
 
 ### Prerequisites
 - Python 3.11+
@@ -167,7 +180,7 @@ Final Answer + Steps + Tools Used → returned to API caller
 
 ```bash
 # 1. Clone / extract the project
-cd rag_agent
+cd ragent-backend
 
 # 2. Create virtual environment
 python -m venv venv

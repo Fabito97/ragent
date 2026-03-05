@@ -156,6 +156,8 @@ def get_chunks_by_index(
     collection = store._collection
     data = collection.get(include=["metadatas", "documents"])
 
+    log.info("Retrieving chunk %s for %s", chunk_indices, filename)
+
     chunks = []
     index_set = set(chunk_indices)
     for doc_id, meta, text in zip(data["ids"], data["metadatas"], data["documents"]):
@@ -166,6 +168,9 @@ def get_chunks_by_index(
             chunks.append(Document(page_content=text, metadata={**meta, "id": doc_id}))
 
     chunks.sort(key=lambda d: d.metadata.get("chunk_index", 0))
+
+    log.info("Retrieved '%.80s' chunk for %s", chunk_indices, filename)
+
     return chunks
 
 
@@ -195,6 +200,9 @@ def get_chunks_by_page(
             chunks.append(Document(page_content=text, metadata={**meta, "id": doc_id}))
 
     chunks.sort(key=lambda d: d.metadata.get("chunk_index", 0))
+
+    log.info("Retrieved %.80s chunks for %s - page '%.80s'", len(chunks), filename, page)
+
     return chunks
 
 
@@ -261,4 +269,5 @@ def get_chunks_by_filename(filename: str) -> List[Document]:
 
     # Sort by chunk_index so the caller gets them in reading order
     chunks.sort(key=lambda d: d.metadata.get("chunk_index", 0))
+
     return chunks
