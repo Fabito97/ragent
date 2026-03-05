@@ -10,6 +10,7 @@ env/
 ENV/
 # Data
 uploads/*
+chroma_db/
 
 # Environment
 .env
