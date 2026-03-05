@@ -1,0 +1,28 @@
+.env
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+# Data
+uploads/*
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Testing
+.pytest_cache/
+.coverage
+.internal/
+.cache/
+# OS
+.DS_Store
