@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import PaperAirplaneIcon from "../ui/icons/PaperAirplaneIcon";
 import PlusIcon from "../ui/icons/PlusIcon";
 import { useGetDocumentsQuery } from "../../store/api/documentsApi";
-import AddDocumentModal from "../AddDocumentModal";
+import DocumentUploadModal from "../documents/DocumentUploadModal";
 import { extractFilename } from "../../utils/fileUtils";
 
 interface ChatInputProps {
@@ -113,6 +113,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-12 max-h-32 scrollbar-thin"
               disabled={isLoading}
               style={{ overflowY: "auto" }}
+              autoFocus
             />
           </div>
 
@@ -173,7 +174,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       </div>
 
       {/* Upload modal */}
-      <AddDocumentModal
+      <DocumentUploadModal
         isOpen={isDocsModalOpen}
         onClose={() => setIsDocsModalOpen(false)}
       />

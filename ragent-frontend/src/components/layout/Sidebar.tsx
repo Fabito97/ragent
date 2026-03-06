@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { MoreVertical } from "lucide-react";
 import { navItems } from "../../lib/constants";
 import { useChatContext } from "../../context/ChatContext";
-import AddDocumentModal from "../AddDocumentModal";
+import DocumentUploadModal from "../documents/DocumentUploadModal";
 import PlusIcon from "../ui/icons/PlusIcon";
 import { useDeleteSessionMutation } from "../../store/api/chatApi";
 
@@ -14,10 +14,9 @@ const Sidebar = () => {
   const {
     startNewConversation,
     conversations,
-    selectConversation,
+    setConversation,
     conversationId,
     currentConversation,
-    messages,
   } = useChatContext();
   const navigate = useNavigate();
   const [isDocsModalOpen, setDocsModalOpen] = useState(false);
@@ -63,17 +62,20 @@ const Sidebar = () => {
       }}
       className="w-64 flex flex-col shrink-0 shadow-md border-r border-gray-700 text-gray-100"
     >
-      <div className="px-4 border-b border-gray-700/50 mb-5 flex flex-col justify-center items-cente h-17">
-        <div className=" flex justify-start items-center gap-2">
-          <img src="/favicon-32x32.png" alt="Logo" className="w-10 h-10" />
-          <p className="text-xs text-cente text-gray-500 ml">
-            Intelligent Analysis
-          </p>
+      <div className="px-4 py-2 border-b border-gray-700/50 bg-whit mb-5 h-17 w-full">
+        <div className=" flex flex- justify-start items-center w-full">
+          <img src="/favicon-32x32.png" alt="Logo" className="w-11 h-11" />
+          <div className="flex flex-col items-center gap- w-full">
+            <h2 className="font-bold text-sm w-full ">RAgent</h2>
+            <p className="text-xs text-left w-full text-gray-500">
+              Intelligent insights
+            </p>
+          </div>
         </div>
       </div>
 
       <div className="px-5">
-        <AddDocumentModal
+        <DocumentUploadModal
           isOpen={isDocsModalOpen}
           onClose={() => setDocsModalOpen(false)}
         />
@@ -124,7 +126,7 @@ const Sidebar = () => {
                 <div key={conversation.id} className="relative group">
                   <div
                     onClick={() => {
-                      selectConversation(conversation.id);
+                      setConversation(conversation.id);
                       navigate(`/chat/${conversation.id}`, {
                         state: { conversationId: conversation.id },
                       });
@@ -174,8 +176,16 @@ const Sidebar = () => {
                 </div>
               ))}
             </div>
-          ) : conversations && (
-            <div className={"flex justify-center text-xs dark:text-gray-500 text-center pt-5"}>No Chats yet, click on New chat to start a conversation</div>
+          ) : (
+            conversations && (
+              <div
+                className={
+                  "flex justify-center text-xs dark:text-gray-500 text-center pt-5"
+                }
+              >
+                No Chats yet, click on New chat to start a conversation
+              </div>
+            )
           )}
         </div>
       </div>

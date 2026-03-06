@@ -8,15 +8,13 @@ import { marked } from "marked";
 
 interface MessageBubbleProps {
   message: Message;
-  isSending: boolean;
-  isStreaming: boolean;
   error?: string;
+  isLast?: boolean;
 }
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
-  isSending,
-  isStreaming,
+  isLast,
   error,
 }) => {
   const isUser = message.sender === "user";
@@ -58,12 +56,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     <div className={`flex items-start ${bubbleAlignment} w-full`}>
       <div className={bubbleStyles}>
         {isAI &&
-        (message.status === "pending" || message.status === "streaming") ? (
+        (message.status === "pending") ? (
           <LoadingSpinner />
         ) : isAI ? (
           <div className="mb-10 mt-5 flex items-start justify-start gap-1">
             {<AILogo />}
-            {error ? (
+            {message.status === "error" && isLast ? (
               <div>
                 <p className="px-3 py-2 border border-red-500 rounded-lg animate-pulse">{error}</p>
               </div>

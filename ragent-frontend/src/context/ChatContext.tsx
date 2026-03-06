@@ -8,9 +8,6 @@ import React, {
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   addMessage,
-  startStreaming,
-  appendStreamingContent,
-  stopStreaming,
   updateMessageStatus,
   updateMessageContent,
   setError,
@@ -26,8 +23,7 @@ import {
   useListSessionsQuery,
   useGetSessionMessagesQuery,
 } from "../store/api/chatApi";
-import { Message, Role, Conversation } from "../types";
-import { useNavigate } from "react-router-dom";
+import { Message, Conversation } from "../types";
 
 interface ChatContextType {
   conversationId: string | null;
@@ -35,9 +31,10 @@ interface ChatContextType {
   currentConversation: Conversation | null;
   conversations: Conversation[] | undefined;
   isLoadingConversations: boolean;
+  isLoadingMessages: boolean;
   messages: Message[];
   isSending: boolean;
-  isStreaming: boolean;
+  isErrorMessage: boolean;
   messageDraft: string;
   error: string | null;
   sendMessage: (
@@ -46,9 +43,10 @@ interface ChatContextType {
     navigate?: (path: string) => void,
   ) => void;
   startNewConversation: () => void;
-  selectConversation: (id: string) => void;
+  setConversation: (id: string) => void;
   setDraft: (text: string) => void;
 }
+
 const MAX_TITLE_LENGTH = 27;
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -60,7 +58,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const {
     conversationId,
     isNewConversation,
-    isStreaming,
     messageDraft,
     error,
     messages,
@@ -68,46 +65,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   // API hooks
   const [queryAgentApi, { isLoading: isSending }] = useQueryAgentMutation();
-  const { data: sessionsData, isLoading: isLoadingConversations } =
-    useListSessionsQuery();
-  const { data: sessionDetails } = useGetSessionMessagesQuery(
+  const { data: sessionsData, isLoading: isLoadingConversations } = useListSessionsQuery();
+  const { data: sessionDetails, isLoading: isLoadingMessages, isError: isErrorMessage } = useGetSessionMessagesQuery(
     conversationId || "",
     { skip: !conversationId },
   );
-
-  const getConversationTitle = (firstMessage) =>
-    firstMessage.length > MAX_TITLE_LENGTH
-      ? firstMessage.slice(0, MAX_TITLE_LENGTH) + "..."
-      : firstMessage;
-
-  // Map sessions to conversations format
-  const conversations: Conversation[] | undefined = useMemo(() => {
-    if (!sessionsData?.sessions) return undefined;
-    return sessionsData.sessions.map((session) => ({
-      id: session.session_id,
-      title: session.first_message
-        ? getConversationTitle(session.first_message)
-        : "New Chat",
-      messages: [],
-      createdAt: new Date(session.created_at * 1000).toISOString(),
-      updatedAt: new Date(session.last_active * 1000).toISOString(),
-    }));
-  }, [sessionsData?.sessions]);
-
-  // Derive current conversation object
-  const currentConversation: Conversation | null = useMemo(() => {
-    if (!conversationId || !conversations) return null;
-    return conversations.find((c) => c.id === conversationId) ?? null;
-  }, [conversationId, conversations]);
-
-  // Start a new conversation (only clear conversationId and draft, keep message cache)
+  
+  // Only clears conversationId and draft, keep message cache
   const startNewConversation = useCallback(() => {
     dispatch(startNewChat());
   }, [dispatch]);
 
-  // Select a conversation and load its messages
-  const selectConversation = useCallback(
-    async (id: string) => {
+  // Sets conversation id
+  const setConversation = useCallback(
+    async (id: string | null) => {
       dispatch(setConversationId(id));
       // Messages will be fetched via useGetSessionMessagesQuery hook
     },
@@ -122,6 +93,35 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     [dispatch],
   );
 
+  const getConversationTitle = (firstMessage: string) =>
+    firstMessage.length > MAX_TITLE_LENGTH
+      ? firstMessage.slice(0, MAX_TITLE_LENGTH) + "..."
+      : firstMessage;
+
+  // Map sessions to conversations format
+  const conversations: Conversation[] | undefined = useMemo(() => {
+    if (!sessionsData?.sessions) return undefined;
+
+    return sessionsData.sessions.map((session) => ({
+      id: session.session_id,
+      title: session.first_message
+        ? getConversationTitle(session.first_message)
+        : "New Chat",
+      messages: [],
+      createdAt: new Date(session.created_at * 1000).toISOString(),
+      updatedAt: new Date(session.last_active * 1000).toISOString(),
+    }));
+  }, [sessionsData?.sessions]);
+
+
+  // Derive current conversation info
+  const currentConversation: Conversation | null = useMemo(() => {
+    if (!conversationId || !conversations) return null;
+
+    return conversations.find((c) => c.id === conversationId) ?? null;
+  }, [conversationId, conversations]);
+
+
   // When session details are loaded, update messages in Redux
   React.useEffect(() => {
     if (sessionDetails?.history) {
@@ -134,11 +134,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           status: "sent" as const,
         }),
       );
+
       dispatch(setMessages(loadedMessages));
+
+      dispatch(markConversationStarted());
     }
   }, [sessionDetails, dispatch]);
 
-  // Send a message (non-streaming)
+
+  // Send message function
   const sendMessage = useCallback(
     async (
       content: string,
@@ -146,10 +150,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       navigate?: (path: string) => void,
     ) => {
       const userMessageId = crypto.randomUUID();
-      const streamingId = crypto.randomUUID();
+      const aiMessageId = crypto.randomUUID();
+
+      console.log("Adding conversation message")
 
       // If starting a new chat (no conversationId), clear old messages first
-      if (!conversationId) {
+      if (!conversationId && isNewConversation) {
         dispatch(clearMessages());
       }
 
@@ -170,7 +176,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
       // Add placeholder AI message
       const aiPlaceholder: Message = {
-        id: streamingId,
+        id: aiMessageId,
         sender: "assistant",
         content: "",
         timestamp: Date.now(),
@@ -199,7 +205,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         // Update placeholder AI message with agent answer
         dispatch(
           updateMessageContent({
-            id: streamingId,
+            id: aiMessageId,
             content: result.answer,
             status: "sent",
             timestamp: Date.now(),
@@ -211,9 +217,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         dispatch(updateMessageStatus({ id: userMessageId, status: "sent" }));
       } catch (err) {
         console.error("Error sending message:", err);
-        dispatch(setError("Message failed to send"));
+        dispatch(setError("An error occured while sending message, please try again"));
         dispatch(updateMessageStatus({ id: userMessageId, status: "error" }));
-        dispatch(updateMessageStatus({ id: streamingId, status: "error" }));
+        dispatch(updateMessageStatus({ id: aiMessageId, status: "error" }));
       }
     },
     [conversationId, isNewConversation, dispatch, queryAgentApi],
@@ -227,14 +233,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         currentConversation,
         conversations,
         isLoadingConversations,
+        isLoadingMessages,
         messages,
         isSending,
-        isStreaming,
         messageDraft,
         error,
+        isErrorMessage,
         sendMessage,
         startNewConversation,
-        selectConversation,
+        setConversation,
         setDraft,
       }}
     >

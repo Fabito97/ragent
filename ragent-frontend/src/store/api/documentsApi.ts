@@ -10,9 +10,15 @@ export interface UploadResponse {
   chunks_stored: number;
 }
 
+export interface DocumentSummary {
+  filename: string;
+  chunks: number;
+}
+
+
 export interface DocumentListResponse {
   total_chunks: number;
-  documents: string[]; // filenames
+  documents: DocumentSummary[]; // filenames
 }
 
 export interface ChunkInfo {
@@ -54,9 +60,9 @@ export const documentsApi = createApi({
       providesTags: (result) =>
         result?.documents
           ? [
-              ...result.documents.map((filename) => ({
+              ...result.documents.map((document) => ({
                 type: "Document" as const,
-                id: filename,
+                id: document.filename,
               })),
               { type: "Documents", id: "LIST" },
             ]

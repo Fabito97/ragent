@@ -1,26 +1,31 @@
-import React, { useState } from 'react';
-import { Upload, Zap } from 'lucide-react';
-import { DocumentCard } from '../components/documents/DocumentCard';
-import { DocumentDetailsSidebar } from '../components/documents/DocumentDetailsSidebar';
+import React, { useState } from "react";
+import { Upload, Zap } from "lucide-react";
+import { DocumentCard } from "../components/documents/DocumentCard";
+import { DocumentDetailsSidebar } from "../components/documents/DocumentDetailsSidebar";
 import {
   useGetDocumentsQuery,
   useGetDocumentByIdQuery,
   useDeleteDocumentMutation,
   useReingestDocumentMutation,
-} from '../store/api/documentsApi';
-import AddDocumentModal from '../components/AddDocumentModal';
+} from "../store/api/documentsApi";
+import DocumentUploadModal from "../components/documents/DocumentUploadModal";
+
+const APi_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const DocumentPage = () => {
   const [isDocsModalOpen, setDocsModalOpen] = useState(false);
   const [selectedFilename, setSelectedFilename] = useState<string | null>(null);
 
   // Fetch documents list
-  const { data: documentsData, isLoading: isLoadingDocs, refetch: refetchDocs } =
-    useGetDocumentsQuery();
+  const {
+    data: documentsData,
+    isLoading: isLoadingDocs,
+    refetch: refetchDocs,
+  } = useGetDocumentsQuery();
 
   // Fetch selected document details
   const { data: selectedDocumentData, isLoading: isLoadingDetail } =
-    useGetDocumentByIdQuery(selectedFilename || '', {
+    useGetDocumentByIdQuery(selectedFilename || "", {
       skip: !selectedFilename,
     });
 
@@ -39,8 +44,8 @@ const DocumentPage = () => {
       }
       refetchDocs();
     } catch (err) {
-      console.error('Failed to delete document:', err);
-      alert('Failed to delete document');
+      console.error("Failed to delete document:", err);
+      alert("Failed to delete document");
     }
   };
 
@@ -54,28 +59,28 @@ const DocumentPage = () => {
         // Re-query the document details
       }
     } catch (err) {
-      console.error('Failed to reingest document:', err);
-      alert('Failed to reingest document');
+      console.error("Failed to reingest document:", err);
+      alert("Failed to reingest document");
     }
   };
 
   // Handle download
   const handleDownload = (filename: string) => {
     // Create a download link
-    const link = document.createElement('a');
-    link.href = `http://127.0.0.1:8000/documents/${filename}/download`;
+    const link = document.createElement("a");
+    link.href = `${APi_URL}/documents/${filename}/download`;
     link.download = filename;
     link.click();
   };
 
   const documents = documentsData?.documents || [];
-  const totalChunks = documentsData?.total_chunks || 0;
 
   return (
-    <div className="min-h-screen flex flex-col">     
+    <div className="min-h-screen flex flex-col">
 
       {/* Documents Grid */}
       <div className="flex-1 overflow-y-auto max-w-7xl mx-auto w-full px-6 py-8 pt-12">
+
         {isLoadingDocs ? (
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
@@ -103,8 +108,7 @@ const DocumentPage = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {documents.map((document) => {
-              // For the currently selected document, use its details
-              
+             
               const fileOnDisk =
                 selectedFilename === document.filename && selectedDocumentData
                   ? selectedDocumentData.file_on_disk
@@ -124,7 +128,7 @@ const DocumentPage = () => {
                   isReingesting={isReingesting}
                 />
               );
-            })} 
+            })}
           </div>
         )}
       </div>
@@ -139,7 +143,7 @@ const DocumentPage = () => {
       )}
 
       {/* Upload Modal */}
-      <AddDocumentModal
+      <DocumentUploadModal
         isOpen={isDocsModalOpen}
         onClose={() => setDocsModalOpen(false)}
       />

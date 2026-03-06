@@ -1,6 +1,6 @@
 export type Role = "user" | "assistant";
 
-export type status = "pending" | "sent" | "error" | "streaming";
+export type status = "pending" | "sent" | "error";
 
 export interface Message {
   id: string;
@@ -8,7 +8,6 @@ export interface Message {
   sender: Role;
   timestamp: number; // ISO 8601 format
   conversationId?: string;
-  isStreaming?: boolean;
   status?: status;
 }
 

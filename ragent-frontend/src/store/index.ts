@@ -1,7 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import chatReducer from "./slice/chatSlice";
-import documentsReducer from "./slice/documentsSlice";
 import { chatApi } from "./api/chatApi";
 import { documentsApi } from "./api/documentsApi";
 // import { analysisApi } from '../features/analysis/analysisApi';
@@ -9,7 +8,6 @@ import { documentsApi } from "./api/documentsApi";
 export const store = configureStore({
   reducer: {
     chat: chatReducer,
-    documents: documentsReducer,
     // RTK Query reducers
     [chatApi.reducerPath]: chatApi.reducer,
     [documentsApi.reducerPath]: documentsApi.reducer,

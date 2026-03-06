@@ -1,8 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { formatBytes } from "../lib/utils";
-import { useUploader } from "../hooks/useUploader";
-import { useUploadDocumentMutation } from "../store/api/documentsApi";
+import { formatBytes } from "../../lib/utils";
+import { useUploader } from "../../hooks/useUploader";
+import { useUploadDocumentMutation } from "../../store/api/documentsApi";
 
 interface AddDocsModalProps {
   isOpen: boolean;
@@ -11,22 +11,17 @@ interface AddDocsModalProps {
 
 const ACCEPTED_FORMATS = [".pdf", ".csv", ".xlsx", ".xls", ".txt"];
 
-const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
+const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   // Hook to manage single file upload
-  const { item, addFile, startUpload, reset } = useUploader();
-
+  const { item, addFile, startUpload, reset, isProcessing, processMessage } =
+    useUploader();
 
   const [uploadDocument] = useUploadDocumentMutation();
 
-
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // Message displayed to user during upload processing
-  const [processMessage, setProcessMessage] = useState<string | null>(null);
-
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -34,7 +29,6 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     noClick: false,
@@ -48,39 +42,25 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
     fileInputRef.current?.click();
   };
 
-  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       addFile(e.target.files[0]);
     }
   };
 
-
   const handleDocumentUpload = async () => {
     if (!item || !item.file) return;
 
-    setIsProcessing(true);
-    setProcessMessage("Uploading document...");
-
-    try {
-      const form = new FormData();
-      form.append("file", item.file, item.name);
-
-      await uploadDocument(form).unwrap();
-
-      setProcessMessage("Upload completed.");
-      // Small delay so user sees success message before closing
-      setTimeout(() => {
-        reset();
-        setIsProcessing(false);
-        setProcessMessage(null);
-        onClose();
-      }, 900);
-    } catch (err) {
-      console.error("Upload failed:", err);
-      setProcessMessage("Upload failed. Please try again or check the file.");
-      setIsProcessing(false);
-    }
+    await startUpload(
+      (formData) => uploadDocument(formData).unwrap(),
+      {
+        onSuccess: () => {
+          // Close after successful upload
+          reset();
+          onClose();
+        },
+      },
+    );
   };
 
   // Don't render modal if not open
@@ -111,6 +91,7 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
 
         {/* Main content grid: upload area on left, file preview on right */}
         <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+          
           {/* File upload section */}
           <div>
             {/* Drag and drop zone */}
@@ -123,6 +104,7 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
                 ref={fileInputRef}
                 onChange={handleFileChange}
               />
+              
               <div
                 onClick={handleFileClick}
                 className="flex flex-col items-center gap-2"
@@ -136,31 +118,34 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
                 </small>
               </div>
             </div>
-          
           </div>
 
           {/* File preview section - displays selected file with progress */}
           <div>
             {!item ? (
               <div className="text-sm text-center text-gray-500">
-                No file added. Add a file to begin.
+                 Add a file to begin.
               </div>
             ) : (
               <>
                 <h2 className="mb-5">File preview</h2>
                 {/* File item */}
                 <div className="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300">
+                  
                   {/* File info row: name, size, and status */}
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
+
                       {/* File type badge */}
                       <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-xs">
                         {item.name.split(".").pop()?.toUpperCase() || "F"}
                       </div>
+
                       <div>
                         <div className="text-sm font-medium text-gray-800 dark:text-gray-100">
                           {item.name}
                         </div>
+                        
                         {/* Display file size */}
                         <div className="text-xs text-gray-400">
                           {item.size ? formatBytes(item.size) : ""}
@@ -168,7 +153,7 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
                       </div>
                     </div>
 
-                    {/* Upload progress percentage or status */}
+                     {/* Upload progress percentage or status */}
                     <div className="text-right text-xs">
                       <div>
                         {item.status === "uploading"
@@ -205,11 +190,8 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
 
         {/* Footer with help text and action buttons */}
         <div className="mt-6 flex justify-between items-center">
-          <div className="text-xs text-gray-400">
-            Need help? Visit our Help Center
-          </div>
-
           <div className="flex gap-2">
+
             {/* Cancel button */}
             <button
               onClick={() => {
@@ -221,6 +203,7 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
             >
               Cancel
             </button>
+            
             {/* Upload button - triggers upload */}
             <button
               disabled={!item || isProcessing}
@@ -253,4 +236,4 @@ const AddDocumentModal: React.FC<AddDocsModalProps> = ({ isOpen, onClose }) => {
 };
 
 /** Export component as default export */
-export default AddDocumentModal;
+export default DocumentUploadModal;

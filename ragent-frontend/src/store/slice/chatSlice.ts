@@ -2,21 +2,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Message, status } from "../../types";
 
 interface ChatState {
-  // All messages in the current conversation
+  // All messages in the current conversation session
   messages: Message[];
 
-  // Backend conversation ID (null until first message is sent)
+  // Backend conversation session ID (null until first message is sent)
   conversationId: string | null;
 
-  // Whether the current conversation is new (not persisted yet)
+  // Whether the current conversation is new 
   isNewConversation: boolean;
-
-  // Streaming state for assistant response
-  isStreaming: boolean;
-  streamingMessageId: string | null;
-
-  // Optional buffer for streaming chunks
-  streamBuffer: string;
 
   // Optional input draft (for UI input box)
   messageDraft: string;
@@ -29,9 +22,6 @@ const initialState: ChatState = {
   messages: [],
   conversationId: null,
   isNewConversation: true,
-  isStreaming: false,
-  streamingMessageId: null,
-  streamBuffer: "",
   messageDraft: "",
   error: null,
 };
@@ -49,19 +39,7 @@ const chatSlice = createSlice({
       state.messages = action.payload;
     },
     // Start streaming assistant response
-    startStreaming: (state, action: PayloadAction<string>) => {
-      state.isStreaming = true;
-      state.streamingMessageId = action.payload;
-      state.streamBuffer = "";
-      state.messages.push({
-        id: action.payload,
-        sender: "user",
-        content: "",
-        timestamp: Date.now(),
-        isStreaming: true,
-      });
-    },
-
+   
     updateMessageContent: (
       state,
       action: PayloadAction<{
@@ -82,32 +60,8 @@ const chatSlice = createSlice({
       }
     },
 
-    // Append a token chunk to the streaming message
-    appendStreamingContent: (
-      state,
-      action: PayloadAction<{ id: string; token: string }>
-    ) => {
-      const message = state.messages.find((m) => m.id === action.payload.id);
-      if (message) {
-        message.content += action.payload.token;
-      }
-    },
-
-    // Stop streaming and finalize the assistant message
-    stopStreaming: (state) => {
-      state.isStreaming = false;
-      const message = state.messages.find(
-        (m) => m.id === state.streamingMessageId
-      );
-      if (message) {
-        message.isStreaming = false;
-      }
-      state.streamingMessageId = null;
-      state.streamBuffer = "";
-    },
-
     // Set the conversation ID after first message is sent
-    setConversationId: (state, action: PayloadAction<string>) => {
+    setConversationId: (state, action: PayloadAction<string | null>) => {
       state.conversationId = action.payload;
       state.isNewConversation = false;
     },
@@ -115,7 +69,6 @@ const chatSlice = createSlice({
     // Clear all messages (e.g. when starting fresh)
     clearMessages: (state) => {
       state.messages = [];
-      state.isNewConversation = true;
     },
 
     // Mark conversation as no longer new (after first message is sent)
@@ -145,22 +98,11 @@ const chatSlice = createSlice({
       if (msg) msg.status = action.payload.status;
     },
 
-    // appendStreamingContent: (
-    //   state,
-    //   action: PayloadAction<{ id: string; contentChunk: string }>
-    // ) => {
-    //   const msg = state.messages.find((m) => m.id === action.payload.id);
-    //   if (msg) msg.content += action.payload.contentChunk;
-    // },
-
     // Reset entire chat state (e.g. when starting new chat)
     resetChatState: (state) => {
       state.messages = [];
       state.conversationId = null;
       state.isNewConversation = true;
-      state.isStreaming = false;
-      state.streamingMessageId = null;
-      state.streamBuffer = "";
       state.messageDraft = "";
       state.error = null;
     },
@@ -170,8 +112,7 @@ const chatSlice = createSlice({
       state.conversationId = null;
       state.isNewConversation = true;
       state.messageDraft = "";
-      state.isStreaming = false;
-      state.streamingMessageId = null;
+      state.error = null;
       // Keep messages in cache so they're not lost if user navigates back
     },
   },
@@ -179,10 +120,7 @@ const chatSlice = createSlice({
 
 export const {
   addMessage,
-  startStreaming,
-  appendStreamingContent,
   updateMessageStatus,
-  stopStreaming,
   setConversationId,
   updateMessageContent,
   clearMessages,

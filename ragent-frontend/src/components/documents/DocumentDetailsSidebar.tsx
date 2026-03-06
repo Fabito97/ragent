@@ -5,7 +5,7 @@ import type {
   DocumentDetailResponse,
   ChunkInfo,
 } from "../../store/api/documentsApi";
-import LoadingSpinner from "../ui/LoadingSpinner.tsx"
+import LoadingSpinner from "../ui/LoadingSpinner.tsx";
 
 interface DocumentDetailsSidebarProps {
   document: DocumentDetailResponse | null;
@@ -67,9 +67,9 @@ export const DocumentDetailsSidebar: React.FC<DocumentDetailsSidebarProps> = ({
 
       {/* Content */}
       {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner />
-          <div className="text-xs text-gray-400">Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading document details...</p>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto scrollbar-thin">
@@ -104,7 +104,7 @@ export const DocumentDetailsSidebar: React.FC<DocumentDetailsSidebarProps> = ({
               onClick={() => setShowChunks(!showChunks)}
               className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded text-sm transition-colors"
             >
-              <Eye size={14} />
+              <Eye size={12} />
               {showChunks ? "Hide" : "Inspect"} Chunks
             </button>
           </div>
