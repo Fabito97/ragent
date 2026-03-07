@@ -29,12 +29,16 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
     }
   };
 
+  // build accept string for both dropzone and native input
+  const acceptString = ACCEPTED_FORMATS.join(",");
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop,
     noClick: false,
     noKeyboard: false,
     multiple: false,
     useFsAccessApi: false,
+    accept: {acceptedFiles: ACCEPTED_FORMATS},
   });
 
   /** Trigger file input click */
@@ -51,16 +55,13 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
   const handleDocumentUpload = async () => {
     if (!item || !item.file) return;
 
-    await startUpload(
-      (formData) => uploadDocument(formData).unwrap(),
-      {
-        onSuccess: () => {
-          // Close after successful upload
-          reset();
-          onClose();
-        },
+    await startUpload((formData) => uploadDocument(formData).unwrap(), {
+      onSuccess: () => {
+        // Close after successful upload
+        reset();
+        onClose();
       },
-    );
+    });
   };
 
   // Don't render modal if not open
@@ -91,7 +92,6 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
 
         {/* Main content grid: upload area on left, file preview on right */}
         <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-          
           {/* File upload section */}
           <div>
             {/* Drag and drop zone */}
@@ -103,8 +103,9 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
                 {...(getInputProps() as any)}
                 ref={fileInputRef}
                 onChange={handleFileChange}
+                accept={acceptString}
               />
-              
+
               <div
                 onClick={handleFileClick}
                 className="flex flex-col items-center gap-2"
@@ -124,18 +125,16 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
           <div>
             {!item ? (
               <div className="text-sm text-center text-gray-500">
-                 Add a file to begin.
+                Add your document for processing.
               </div>
             ) : (
               <>
                 <h2 className="mb-5">File preview</h2>
                 {/* File item */}
                 <div className="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300">
-                  
                   {/* File info row: name, size, and status */}
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
-
                       {/* File type badge */}
                       <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-xs">
                         {item.name.split(".").pop()?.toUpperCase() || "F"}
@@ -145,7 +144,7 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
                         <div className="text-sm font-medium text-gray-800 dark:text-gray-100">
                           {item.name}
                         </div>
-                        
+
                         {/* Display file size */}
                         <div className="text-xs text-gray-400">
                           {item.size ? formatBytes(item.size) : ""}
@@ -153,34 +152,15 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
                       </div>
                     </div>
 
-                     {/* Upload progress percentage or status */}
-                    <div className="text-right text-xs">
-                      <div>
-                        {item.status === "uploading"
-                          ? `${item.progress}%`
-                          : item.status}
-                      </div>
+                    {/* Action button: Remove */}
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => reset()}
+                        className="px-3 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700"
+                      >
+                        Remove
+                      </button>
                     </div>
-                  </div>
-
-                  {/* Progress bar */}
-                  <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded overflow-hidden">
-                    <div
-                      style={{ width: `${item.progress}%` }}
-                      className={`h-2 bg-emerald-500 transition-all ${
-                        item.status === "completed" ? "bg-green-500" : ""
-                      }`}
-                    />
-                  </div>
-
-                  {/* Action button: Remove */}
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => reset()}
-                      className="px-3 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700"
-                    >
-                      Remove
-                    </button>
                   </div>
                 </div>
               </>
@@ -189,32 +169,29 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
         </div>
 
         {/* Footer with help text and action buttons */}
-        <div className="mt-6 flex justify-between items-center">
-          <div className="flex gap-2">
+        <div className="w-full mt-6 flex justify-between items-center">
+          {/* Cancel button */}
+          <button
+            onClick={() => {
+              reset();
+              onClose();
+            }}
+            className="hover:bg-gray-600 dark:text-gray-300 text-gray-500 hover:text-white px-3 rounded-md"
+            disabled={isProcessing}
+          >
+            Cancel
+          </button>
 
-            {/* Cancel button */}
-            <button
-              onClick={() => {
-                reset();
-                onClose();
-              }}
-              className="hover:bg-gray-600 dark:text-gray-300 text-gray-500 hover:text-white px-3 rounded-md"
-              disabled={isProcessing}
-            >
-              Cancel
-            </button>
-            
-            {/* Upload button - triggers upload */}
-            <button
-              disabled={!item || isProcessing}
-              onClick={handleDocumentUpload}
-              className={`btn ${
-                (!item || isProcessing) && "opacity-50 cursor-disabled"
-              } px-2 py-1 rounded-md bg-blue-700 hover:bg-blue-800`}
-            >
-              {isProcessing ? "Processing..." : "Upload"}
-            </button>
-          </div>
+          {/* Upload button - triggers upload */}
+          <button
+            disabled={!item || isProcessing}
+            onClick={handleDocumentUpload}
+            className={`btn ${
+              (!item || isProcessing) && "opacity-50 cursor-disabled"
+            } px-2 py-1 rounded-md bg-blue-700 hover:bg-blue-800`}
+          >
+            {isProcessing ? "Processing..." : "Upload"}
+          </button>
         </div>
 
         {/* Processing overlay - shows spinner and message during upload */}
@@ -235,5 +212,5 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
   );
 };
 
-/** Export component as default export */
+
 export default DocumentUploadModal;

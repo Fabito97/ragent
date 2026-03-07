@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ChatInput from "../components/chat/ChatInput";
 import { useChatContext } from "../context/ChatContext";
@@ -21,22 +21,59 @@ const ChatPage = () => {
   } = useChatContext();
   const { conversationId } = useParams();
 
-  const UUID_REGEX =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-  function isValidUUID(id?: string) {
-    return typeof id === "string" && UUID_REGEX.test(id);
-  }
+  const [loadError, setLoadError] = React.useState<string | null>(null);
 
   useEffect(() => {
     if (conversationId) {
-      if (!isValidUUID(conversationId)) {
-        return;
-      }
-
-      setConversation(conversationId); // fetch messages, set active
+     // clear any previous load errors and fetch messages
+      setLoadError(null);
+      setConversation(conversationId);
     }
   }, [conversationId, setConversation]);
+
+  if (isLoadingConversations) {
+    return (
+      <div>
+        <div className="flex h-screen flex-col items-center justify-center text-center pb-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading Chat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const hasLoadFailure =
+    !!loadError ||
+    isErrorMessage ||
+    (conversationId && !messages && !isLoadingConversations);
+
+  if (hasLoadFailure) {
+    const errorText =
+      loadError ||
+      (isErrorMessage && "An error occurred while loading conversations.") ||
+      "Failed to load messages.";
+
+
+    const handleNew = () => {
+      startNewConversation();
+      navigate("/");
+    };
+
+    return (
+      <div className="h-screen flex flex-col items-center justify-center text-center p-4 pb-20">
+        <p className="text-red-500 mb-4">{errorText}</p>
+        <div className="space-x-4">
+         
+          <button
+            onClick={handleNew}
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          >
+            Start new conversation
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className="h-full">
