@@ -17,6 +17,7 @@ import {
   startNewChat,
   setMessageDraft,
   markConversationStarted,
+  resetChatState
 } from "../store/slice/chatSlice";
 import {
   useQueryAgentMutation,
@@ -43,6 +44,7 @@ interface ChatContextType {
     navigate?: (path: string) => void,
   ) => void;
   startNewConversation: () => void;
+  resetChat: () => void;
   setConversation: (id: string) => void;
   setDraft: (text: string) => void;
 }
@@ -74,6 +76,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   // Only clears conversationId and draft, keep message cache
   const startNewConversation = useCallback(() => {
     dispatch(startNewChat());
+  }, [dispatch]);
+ 
+  const resetChat = useCallback(() => {
+    dispatch(resetChatState());
   }, [dispatch]);
 
   // Sets conversation id
@@ -241,6 +247,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         isErrorMessage,
         sendMessage,
         startNewConversation,
+        resetChat,
         setConversation,
         setDraft,
       }}

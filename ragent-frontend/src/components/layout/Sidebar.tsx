@@ -6,6 +6,7 @@ import { useChatContext } from "../../context/ChatContext";
 import DocumentUploadModal from "../documents/DocumentUploadModal";
 import PlusIcon from "../ui/icons/PlusIcon";
 import { useDeleteSessionMutation } from "../../store/api/chatApi";
+import { resetChatState } from "../../store/slice/chatSlice";
 
 const MAX_TITLE_LENGTH = 50;
 
@@ -15,6 +16,7 @@ const Sidebar = () => {
     startNewConversation,
     conversations,
     setConversation,
+    resetChat,
     conversationId,
     currentConversation,
   } = useChatContext();
@@ -46,7 +48,7 @@ const Sidebar = () => {
       await deleteSession(conversationId).unwrap();
       // If deleted conversation is current, navigate home
       if (conversationId === currentConversation?.id) {
-        startNewConversation();
+        resetChat();
         navigate("/");
       }
       setOpenMenuId(null);
