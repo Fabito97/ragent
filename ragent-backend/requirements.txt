@@ -10,9 +10,10 @@ langchain-community>=0.3.0
 langchain-groq>=0.2.0
 langchain-chroma>=0.1.4
 langchain-core>=0.3.0
+langchain-huggingface>=0.1.0
 
 # Document Loaders (used by LangChain)
-pypdf>=4.3.0
+pymupdf>=1.27.1
 pandas>=2.2.2
 openpyxl>=3.1.5
 
@@ -26,4 +27,3 @@ groq>=0.11.0
 # Utilities
 python-dotenv>=1.0.1
 tenacity>=8.3.0
-langchain-huggingface>=0.1.0

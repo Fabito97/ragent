@@ -30,9 +30,9 @@ from app.utils.logger import get_logger
 log = get_logger(__name__)
 
 # Session TTL — sessions inactive longer than this are eligible for cleanup
-SESSION_TTL_SECONDS = 60 * 60 * 2  # 2 hours
+SESSION_TTL_SECONDS = 60 * 60 * 24  # 24 hours
 
-
+MAX_MESSAGES = 40  
 class Session:
     def __init__(self, session_id: str):
         self.session_id = session_id
@@ -50,6 +50,12 @@ class Session:
 
     def is_expired(self) -> bool:
         return (time.time() - self.last_active) > SESSION_TTL_SECONDS
+    
+    def compact_history(self):
+        """Keep only the most recent messages to avoid context overflow."""
+        if len(self.history) > MAX_MESSAGES:
+            # Keep only the last N messages
+            self.history = self.history[-MAX_MESSAGES:]
 
 
 class SessionStore:

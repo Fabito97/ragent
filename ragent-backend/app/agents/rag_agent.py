@@ -161,7 +161,7 @@ def run_agent(
         "tools_used":   [str, ...],
     }
     """
-    # ── Resolve session ───────────────────────────────────────────────────────
+    # Resolve session 
     session = session_store.get_or_create(session_id)
     is_new = session_id != session.session_id
 
@@ -175,7 +175,9 @@ def run_agent(
 
     session.add_human_turn(query)
 
-    # ── Run agent with session history ────────────────────────────────────────
+    session.compact_history()
+
+    # Run agent with session history 
     executor = _build_agent_executor(api_filenames=api_filenames)
 
     result = executor.invoke({
@@ -189,10 +191,10 @@ def run_agent(
         log.warning("Agent produced empty answer for query: '%.80s'", query)
         answer = "I was unable to generate a response. Please try rephrasing your question."
 
-    # ── Persist this turn into the session ───────────────────────────────────
+    # Persist this turn into the session 
     session.add_ai_turn(answer)
 
-    # ── Build response ────────────────────────────────────────────────────────
+    # Build response 
     intermediate = result.get("intermediate_steps", [])
     tools_used = []
     steps_summary = []

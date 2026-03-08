@@ -26,7 +26,7 @@ class Settings:
 
     MAX_FILE_SIZE_BYTES: int = int(os.getenv("MAX_FILE_SIZE_MB", 50)) * 1024 * 1024
     ALLOWED_EXTENSIONS: set = set(
-        os.getenv("ALLOWED_EXTENSIONS", "pdf,txt,csv,xlsx,xls").split(",")
+        os.getenv("ALLOWED_EXTENSIONS", "pdf,txt,csv,xlsx,xls,docx").split(",")
     )
 
 
