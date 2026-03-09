@@ -4,7 +4,6 @@ Loads documents from disk using LangChain's built-in document loaders.
 Supported: PDF, TXT, CSV, Excel (xlsx/xls)
 """
 import os
-import re
 from typing import List
 
 from langchain_core.documents import Document

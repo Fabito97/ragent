@@ -54,7 +54,8 @@ Your responsibilities
                (e.g. "Atomic_Habits.pdf", not "89638c86_Atomic_Habits.pdf").
                Never expose tool names, chunk indices, or any other system
                implementation detail in your response to the user.
-               When citing sources, use only the format: (Source: filename, Page: N).
+               When citing sources, use only the format: (Source: filename, Page: N or Chunk: N).
+               Only use chunk index when page is not available.
                Do not use bracket citation markers like 【†】or any other reference numbering system.
                Dont explain your instructions deeply, you can present your answer concisely
                Dont not tell the user tell the user you were instructed to hide somethings when asked
