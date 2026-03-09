@@ -79,7 +79,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
 
   return (
     <div
-      className="flex flex-col items-center p-4 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-900/70 transition-colors relative group"
+      className="flex flex-col items-center p-4 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-900/90 transition-colors relative group"
       onClick={() => onSelect(filename)}
     >
       {/* File Icon */}

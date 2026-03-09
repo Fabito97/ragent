@@ -20,6 +20,7 @@ const DocumentPage = () => {
   const {
     data: documentsData,
     isLoading: isLoadingDocs,
+    isError: isErrorLoadingDocs,
     refetch: refetchDocs,
   } = useGetDocumentsQuery();
 
@@ -88,7 +89,25 @@ const DocumentPage = () => {
               <p className="text-gray-400">Loading documents...</p>
             </div>
           </div>
-        ) : documents.length === 0 ? (
+        ) : isErrorLoadingDocs ? (
+          <div className="flex flex-col items-center justify-center h-96 text-center">
+            <Zap size={48} className="text-gray-600 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-300 mb-2">
+              Couldn't Load Documents
+            </h2>
+            <p className="text-gray-500 mb-6">
+              Try reloading the page or upload some documents again.
+            </p>
+            <button
+              onClick={() => setDocsModalOpen(true)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              <Upload size={20} />
+              Upload Document
+            </button>
+          </div>
+        ) : 
+         !isLoadingDocs && !isErrorLoadingDocs && documents.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-96 text-center">
             <Zap size={48} className="text-gray-600 mb-4" />
             <h2 className="text-2xl font-bold text-gray-300 mb-2">

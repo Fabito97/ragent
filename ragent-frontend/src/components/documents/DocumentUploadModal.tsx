@@ -9,7 +9,15 @@ interface AddDocsModalProps {
   onClose: () => void;
 }
 
-const ACCEPTED_FORMATS = [".pdf", ".csv", ".xlsx", ".xls", ".txt"];
+const ACCEPTED_FORMATS = [".pdf", ".csv", ".xlsx", ".xls", ".txt", ".docx"];
+const ACCEPTED_MIME_TYPES = {
+  "application/pdf": [],
+  "text/csv": [],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [],
+  "application/vnd.ms-excel": [],
+  "text/plain": [],
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": []
+}
 
 const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
   isOpen,
@@ -38,7 +46,7 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
     noKeyboard: false,
     multiple: false,
     useFsAccessApi: false,
-    accept: {acceptedFiles: ACCEPTED_FORMATS},
+    accept: ACCEPTED_MIME_TYPES,
   });
 
   /** Trigger file input click */
@@ -72,7 +80,7 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
       {/* Semi-transparent backdrop that closes modal on click */}
       <div
         className="absolute inset-0 z-10 bg-black opacity-10"
-        onClick={onClose}
+        onClick={!isProcessing && !item ? onClose : undefined}
       />
 
       {/* Modal container */}
@@ -83,7 +91,10 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
             Add Documents
           </h2>
           <button
-            onClick={onClose}
+            onClick={() => {
+              reset();
+              onClose();
+            }}
             className="text-gray-500 hover:text-gray-700 dark:text-gray-300"
           >
             ✕
@@ -130,6 +141,11 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
             ) : (
               <>
                 <h2 className="mb-5">File preview</h2>
+                {item?.error && !isProcessing && (
+                  <div>
+                    <p className="text-red-500 animate-pulse mb-2 w-full ml-auto">{item.error}</p>
+                  </div>
+                )}
                 {/* File item */}
                 <div className="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-300">
                   {/* File info row: name, size, and status */}
@@ -156,7 +172,7 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
                     <div className="flex gap-2 mt-2">
                       <button
                         onClick={() => reset()}
-                        className="px-3 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700"
+                        className="px-3 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
                       >
                         Remove
                       </button>
@@ -176,7 +192,7 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
               reset();
               onClose();
             }}
-            className="hover:bg-gray-600 dark:text-gray-300 text-gray-500 hover:text-white px-3 rounded-md"
+            className="px-2 py-1  hover:bg-gray-600 dark:text-gray-300 text-gray-500 hover:text-white px-3 rounded-md"
             disabled={isProcessing}
           >
             Cancel
@@ -186,7 +202,7 @@ const DocumentUploadModal: React.FC<AddDocsModalProps> = ({
           <button
             disabled={!item || isProcessing}
             onClick={handleDocumentUpload}
-            className={`btn ${
+            className={`btn text-gray-300 ${
               (!item || isProcessing) && "opacity-50 cursor-disabled"
             } px-2 py-1 rounded-md bg-blue-700 hover:bg-blue-800`}
           >

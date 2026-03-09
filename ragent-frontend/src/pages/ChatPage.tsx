@@ -61,6 +61,7 @@ const ChatPage = () => {
 
     return (
       <div className="h-screen flex flex-col items-center justify-center text-center p-4 pb-20">
+        <h2 className="text-2xl font-bold mb-2">Error loading chat messages</h2>
         <p className="text-red-500 mb-4">{errorText}</p>
         <div className="space-x-4">
          
@@ -120,7 +121,7 @@ const ChatPage = () => {
             isLoading={isSending}
           />
         </div>
-      ) : (
+      ) : !isLoadingConversations && (
         <ChatInterface />
       )}
     </section>

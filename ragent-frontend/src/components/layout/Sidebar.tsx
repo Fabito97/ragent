@@ -4,11 +4,7 @@ import { MoreVertical } from "lucide-react";
 import { navItems } from "../../lib/constants";
 import { useChatContext } from "../../context/ChatContext";
 import DocumentUploadModal from "../documents/DocumentUploadModal";
-import PlusIcon from "../ui/icons/PlusIcon";
 import { useDeleteSessionMutation } from "../../store/api/chatApi";
-import { resetChatState } from "../../store/slice/chatSlice";
-
-const MAX_TITLE_LENGTH = 50;
 
 const Sidebar = () => {
   const location = useLocation();
@@ -45,9 +41,12 @@ const Sidebar = () => {
   ) => {
     e.stopPropagation();
     try {
+      console.log("Deleting Conversation", conversationId)
       await deleteSession(conversationId).unwrap();
       // If deleted conversation is current, navigate home
+      console.log("Current Conversation Id", currentConversation?.id)
       if (conversationId === currentConversation?.id) {
+        console.log("navigating to home")
         resetChat();
         navigate("/");
       }
@@ -178,16 +177,22 @@ const Sidebar = () => {
                 </div>
               ))}
             </div>
+          ) : conversations ? (
+            <div
+              className={
+                "flex justify-center text-xs text-gray-500 text-center pt-5"
+              }
+            >
+              No Chats yet, click on New chat to start a conversation
+            </div>
           ) : (
-            conversations && (
-              <div
-                className={
-                  "flex justify-center text-xs dark:text-gray-500 text-center pt-5"
-                }
-              >
-                No Chats yet, click on New chat to start a conversation
-              </div>
-            )
+            <div
+              className={
+                "flex justify-center text-xs text-gray-500 text-center pt-5"
+              }
+            >
+              Failed to load conversations, please try again.
+            </div>
           )}
         </div>
       </div>

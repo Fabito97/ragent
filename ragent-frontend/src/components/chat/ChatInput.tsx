@@ -77,7 +77,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <div className="shrink-0">
-      <div className="relative max-w-3xl mx-auto border-t border-gray-300 rounded-xl dark:border-gray-700/50 bg-gray-200 dark:bg-gray-900 p-4 shrink-0">
+      <div className="relative max-w-3xl mx-auto border border-gray-300 rounded-xl dark:border-gray-700/50 bg-gray-900 p-4 shrink-0">
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {/* Context tags at top */}
           {selectedFilenames.length > 0 && (
@@ -124,7 +124,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               <button
                 type="button"
                 onClick={handleDocumentButtonClick}
-                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-400 h-10 w-10 flex items-center justify-center shrink-0"
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-400 h-10 w-10 flex items-center justify-center shrink-0"
                 title={
                   documents.length === 0
                     ? "Add documents"
